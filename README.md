@@ -2,9 +2,9 @@
 
 <!-- vim: set spell: -->
 
-## Lecture 1
+<!-- Lecture 1 -->
 
-### What is the internet?
+## What is the internet?
 
 - Three components:
   - Hosts (end systems)
@@ -21,7 +21,7 @@
   - Network core
     - Internet backbone of interconnected routers
 
-### How are access networks constructed in the first place?
+## How are access networks constructed in the first place?
 
 - Signals carried by EM waves (radio) or within wires (Ethernet)
 - Network core will move bits around access networks to the destination, using
@@ -31,7 +31,7 @@
     algorithms_
   - Forwarding: moves data from router's input to appropriate router output
 
-### How can the internet grow so big?
+## How can the internet grow so big?
 
 - Connecting all access ISPs to each other does not scale ($O(n^{2})$
   connections)
@@ -41,7 +41,7 @@
 - Creating a hierarchical structure is even better as it reduces load and allows
   for regional ISPs
 
-### What is the internet software architecture?
+## What is the internet software architecture?
 
 - It is complex:
   - Many difference pieces running in different places
@@ -54,9 +54,9 @@
       - Packets are labeled with a number to denote order
       - Packets are transmitted at _full link speed_
 
-## Discussion 1
+<!-- Discussion 1 -->
 
-### Client-server model
+## Client-server model
 
 - Asymmetric communication model
   - Client requests data:
@@ -68,7 +68,7 @@
     - Processes requests, sends replies
 - Clients and servers are programs at the **application layer**
 
-### TCP: Transmission Control Protocol
+## TCP: Transmission Control Protocol
 
 - A connection is set up between client and server
 - Reliable data transfer
@@ -78,7 +78,7 @@
 - Full-duplex byte stream (in two directions simultaneously)
 - Regulated data flow with flow control and congestion control
 
-### UDP: User Data Protocol
+## UDP: User Data Protocol
 
 - Basic transmission service
   - No connection needed
@@ -87,7 +87,7 @@
 - No ordered deliver guarantee
 - No flow control / congestion control
 
-### Socket APIs
+## Socket APIs
 
 - Socket:
   - An endpoint in inter-process communication across a computer network
@@ -98,22 +98,22 @@
 - Socket port numbers
   - Smaller numbers are reserved and only accessible by super-users
 
-### Caveat: Byte ordering matters
+## Caveat: Byte ordering matters
 
 - Data that is sent in little-endian must be read as such, and vice versa
 - The API defines methods to convert to proper network ordering
   - This only works for 16- and 32-bit data, more complex data types must be
     taken into account differently
 
-## Lecture 2
+<!-- Lecture 2 -->
 
-### Packet switching
+## Packet switching
 
 - **Store-and-forward** operations inside the network
 - Sending host
   - Takes application message
 
-### Circuit switching
+## Circuit switching
 
 - End-end resources are allocated and reserved for a voice call between source
   and destination
@@ -121,7 +121,7 @@
   - `FDM` does one user at a time
   - `TDM` alternates users over time
 
-### Packet switching vs. Circuit switching
+## Packet switching vs. Circuit switching
 
 - Packet switching allows more users in the network
 - Example: 1 Mb/s link, where each user needs 100 Kb/s when active, and users
@@ -135,7 +135,7 @@
       - $\sum_{x=0}^{10} P(N, x) \ge 1 - 0.04\%$
       - $N = 35$
 
-### What is the Internet Service Model?
+## What is the Internet Service Model?
 
 - Internet best effort service model
   - Arguably the simplest service model
@@ -145,7 +145,7 @@
     - Timing or in-order delivery
     - Minimum throughput/speed to deliver data
 
-### Internet software appears in the form of protocols
+## Internet software appears in the form of protocols
 
 - Protocols control sending and receiving messages
   - E.g. HTTP, Skype, TCP, etc.
@@ -154,12 +154,12 @@
 - Organized in layers which cannot only talk to the immediate upper or lower
   layer
 
-### Layering
+## Layering
 
 - Modularization allows for easier maintenance
 - Different layers have their own protocols
 
-#### Layers
+### Layers
 
 - **Application:** Supports network applications
   - FTP, SMTP, HTTP
@@ -171,23 +171,23 @@
   - Ethernet, Wi-Fi, PPP
 - **Physical:** Bits "on the wire"
 
-### How to evaluate the internet
+## How to evaluate the internet
 
 Performance is gauged with three metrics:
 
-#### Throughput
+### Throughput
 
 - Throughput is the rate (bits/time) at which units are transferred
 - End-to-end throughput is equivalent to the bottleneck throughput
 
-#### Packet Loss
+### Packet Loss
 
 - Queue preceding link in buffer has finite capacity
 - Packet arriving to full queue dropped
 - Lost packet may be retransmitted by previous node, by source end system, or
   not at all
 
-#### Delay
+### Delay
 
 - Host sending function:
   - Takes application message
@@ -195,7 +195,7 @@ Performance is gauged with three metrics:
   - Transmits packets across network at rate `R`
   - Packet transmission delay $= \frac{L}{R}$
 
-### Packet Delay
+## Packet Delay
 
 If arrival rate (in bits) to link exceeds transmission rate for a period of
 time:
@@ -203,7 +203,7 @@ time:
 - Packets will queue and wait to be transmitted on the link
 - Packets can be dropped (lost) if memory (buffer) fills up
 
-#### Four Sources of Packet Delay
+### Four Sources of Packet Delay
 
 - $d_{proc}$: Nodal processing
   - Check bit errors

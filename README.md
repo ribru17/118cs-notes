@@ -363,3 +363,12 @@ Example: 10 small, referenced objects
 | Non-persistent HTTP | Persistent HTTP | Non-persistent HTTP (5 objects in parallel) |
 | :-----------------: | :-------------: | :-----------------------------------------: |
 |  2 + 2*10 = 22 RTT  | 2 + 10 = 12 RTT |              2 + 2 + 2 = 6 RTT              |
+
+> **NOTE:** Each requires an initial 2 `RTT` to get data from the DOM.
+
+For the last case (five objects in parallel):
+
+1. First two `RTT`s are for setting up connection and requesting DOM data.
+2. Next two `RTT`s are for requesting the first five objects (limit determined
+   by parallel requests).
+3. Last two `RTT`s are for requesting the last five objects.

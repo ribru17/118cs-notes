@@ -220,3 +220,146 @@ time:
   - d: Length of physical link
   - s: Propagation speed
   - $d_{prop} = \frac{d}{s}$
+
+<!-- Lecture 3 -->
+
+## Application Layer
+
+### Creating a network app
+
+- We need to incorporate different machines communicating across the internet
+- We can do this several ways:
+  - Client-server paradigm
+    - Server
+      - Always-on host
+      - Has a permanent IP address
+      - Often used in data centers for scaling
+    - Clients
+      - Communicate with the server
+      - May be intermittently connected
+      - Can have dynamic IP addresses
+      - Do _not_ communicate directly with each other
+    - Examples: HTTP, FTP
+  - Peer-to-peer architecture
+    - Each peer is a client _and_ server
+      - Peers request services from each other in exchange for providing service
+        to one another
+    - Self-scalable architecture; more users means more demand but also more
+      supply
+    - Peers are intermittently connected and change IP addresses
+      - No always-on server
+
+### Communication across network
+
+#### Processes
+
+- A program running within a host
+  - Client process initiates communication
+  - Server process awaits communication
+- To receive messages, processes must have an _identifier_
+  - Identifier includes IP address and port number
+    - IP address is not enough! Many processes can run on one host.
+
+#### Sockets
+
+- Sockets are where processes send and receive messages to and from
+- Analogous to doors
+- There will be one socket on each side of communication
+- Sockets can use different transport services
+
+#### Transport services
+
+- UDP
+  - Connectionless: no connection setup
+  - Unreliable data transfer
+  - No rate control
+    - You control the sending rate
+  - No guarantees on:
+    - Reliability, flow control, congestion control, timing, throughput,
+      security
+- TCP
+  - Connection oriented: setup required between client and server processes
+  - Reliable transfer between client and server
+  - Automated rate control:
+    - Flow control: sender won't overwhelm receiver
+    - Congestion control: throttle sender when the network is overloaded
+  - No guarantees on:
+    - Timing, minimum throughput, security
+
+#### Transport service choices across applications
+
+| Application            | Application Layer Protocol | Transport Protocol |
+| ---------------------- | -------------------------- | ------------------ |
+| File transfer/download | FTP                        | TCP                |
+| E-mail                 | SMTP                       | TCP                |
+| Web documents          | HTTP 1.1                   | TCP                |
+| Internet telephony     | SIP, RTP, or proprietary   | TCP or UDP         |
+| Streaming audio/video  | HTTP, DASH                 | TCP                |
+| Interactive games      | WOW, FPS (proprietary)     | UDP or TCP         |
+
+### Web applications
+
+#### What paradigm?
+
+Client-server
+
+#### What content?
+
+- Web pages
+  - Organized as many objects which can be stored on different web servers
+  - One base-HTML file, referencing other objects by URL
+
+#### How to transfer?
+
+HTTP connections
+
+##### HTTP Overview
+
+- Hypertext Transfer Protocol
+- The Web's application layer protocol
+- Uses client/server model
+  - Stateless: server maintains no information about past client requests
+- Uses TCP
+- Two types of connection
+  - Non-persistent HTTP
+    - TCP connection opened
+    - At most _one_ object sent over the connection
+    - TCP connection closed
+  - Persistent HTTP
+    - TCP connection opened to a server
+    - _Multiple_ objects can be sent over the single connection between the
+      client and that server
+    - TCP connection closed
+
+###### Non-persistent HTTP
+
+Requires two `RTT`s (round trip times) per object, one to establish connection
+and another to send the object over it.
+
+```mermaid
+sequenceDiagram
+
+Client ->> Server: Initiate TCP connection
+Server ->> Client: RTT
+Client ->> Server: Request object
+Note over Server: + Some time to transmit file
+Server ->> Client: RTT
+```
+
+> **NOTE:** There is a variation on this called **Parallel Non-persistent
+> HTTP**, which uses one TCP connection and then multiple parallel requests to
+> fetch referenced objects. The downside is that it uses more server (OS)
+> resources.
+
+###### Persistent HTTP
+
+Main idea is to reuse the same TCP connection for multiple objects. Only
+requires one `RTT` for each referenced object.
+
+###### Non-persistent vs. Persistent
+
+Example: 10 small, referenced objects
+
+| Non-persistent HTTP | Persistent HTTP | Non-persistent HTTP (5 objects in parallel) |
+| :-----------------: | :-------------: | :-----------------------------------------: |
+|  2 + 2*10 = 22 RTT  | 2 + 10 = 12 RTT |              2 + 2 + 2 = 6 RTT              |

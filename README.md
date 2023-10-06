@@ -362,7 +362,7 @@ Example: 10 small, referenced objects
 
 | Non-persistent HTTP | Persistent HTTP | Non-persistent HTTP (5 objects in parallel) |
 | :-----------------: | :-------------: | :-----------------------------------------: |
-|  2 + 2*10 = 22 RTT  | 2 + 10 = 12 RTT |              2 + 2 + 2 = 6 RTT              |
+| 2 + 2\*10 = 22 RTT  | 2 + 10 = 12 RTT |              2 + 2 + 2 = 6 RTT              |
 
 > **NOTE:** Each requires an initial 2 `RTT` to get data from the DOM.
 
@@ -372,3 +372,67 @@ For the last case (five objects in parallel):
 2. Next two `RTT`s are for requesting the first five objects (limit determined
    by parallel requests).
 3. Last two `RTT`s are for requesting the last five objects.
+
+<!-- Discussion 2 -->
+
+### Practice
+
+#### a)
+
+**Q:** What is the propagation delay of a packet of length 1000 bytes sent over
+a link of distance 2500km, propagation speed $2.5x10^8$ m/s, and transmission
+rate 2 Mbps?
+
+**A:** `TBD`
+
+#### b)
+
+**Q:** Suppose host A wants to send a large file to host B. The path from Host A
+to Host B has three hops on the link, the data rates are: $R_1$ = 500Kbps, $R_2$
+= 2Mbps, and $R_3$ = 1Mbps.
+
+- Assuming no other traffic in the network, what is the throughput for the file
+  transfer?
+  - **A:** 500 kbps
+- Suppose the file is 4 million bytes. Roughly how long will it take to transfer
+  the file to Host B?
+  - **A:** (4 / 0.5) * 8 = 64 seconds
+    - We multiply by 8 due to the conversion from bytes to bits
+- Suppose the file is 200 bytes and it is segmented into two 100 byte packets.
+  Also $R_2$ transfer speed has been reduced to 100Kbps. What is the queuing
+  delay for the second packet at host A, the first node, and the second node?
+  - **A:** At the sender node, it is 1.6 ms (the time it takes for the first
+    packet to be sent across $R_1$). The second packet will have queuing delay
+    at the first node since $R_2$ is now the bottleneck (first packet will not
+    finish transmitting by the time the second packet arrives). At the first
+    node the queuing delay will be 6.4ms. The second node will have no queuing
+    delay as the first packet will be long gone before the second packet arrives
+    at the link.
+
+#### c)
+
+**Q:** When you need to retrieve a web document from an HTTP server with an
+_unknown_ IP address, what protocol should you use?
+
+**A:** You must use DNS for if you do not know the IP address (for the
+application layer). For the transport layer, you use UDP with DNS and TCP for
+HTTP.
+
+### Application Layer Models
+
+- Application architectures
+  - Client-server
+  - Peer-to-peer
+  - Hybrid
+    - Skype (TCP & UDP)
+    - `GTalk` (TCP & UDP)
+
+### Application Layer Protocols
+
+- HTTP: stateless protocol on top of TCP
+  - HTTP is fundamentally based on pull model
+  - Persistent vs. Non-persistent
+  - Method types: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, Conditional `GET`
+  - What if we want a stateful service (e.g. a web cart that remembers your
+    items)?
+    - Web caches (proxy server) with cookies e.g.

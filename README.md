@@ -396,7 +396,7 @@ to Host B has three hops on the link, the data rates are: $R_1$ = 500Kbps, $R_2$
   - **A:** 500 kbps
 - Suppose the file is 4 million bytes. Roughly how long will it take to transfer
   the file to Host B?
-  - **A:** (4 / 0.5) * 8 = 64 seconds
+  - **A:** (4 / 0.5) \* 8 = 64 seconds
     - We multiply by 8 due to the conversion from bytes to bits
 - Suppose the file is 200 bytes and it is segmented into two 100 byte packets.
   Also $R_2$ transfer speed has been reduced to 100Kbps. What is the queuing
@@ -436,3 +436,102 @@ HTTP.
   - What if we want a stateful service (e.g. a web cart that remembers your
     items)?
     - Web caches (proxy server) with cookies e.g.
+
+<!-- Lecture 4 -->
+
+### HTTP Messages
+
+There are two types, both with headers terminated by an empty line of `\r\n`:
+
+#### Request Message
+
+- In ASCII (human-readable format)
+- Take various forms
+  - `POST`
+    - Web pages often includes form input
+    - User input sent from the client to the server in the body of the `POST`
+      request
+  - `GET`
+    - Can include user data in the URL field of the message following a `?`
+      - E.g. `www.somesite.com/animalsearch?monkeys&banana`
+  - `HEAD`
+    - Requests headers (only) that would be returned _if_ the specified URL were
+      requested with a `GET` method
+  - `PUT`
+    - Uploads a new file (object) to the server
+    - Completely replaces file that exists at the specified URL with content in
+      the body of the `POST` request message
+
+#### Response Message
+
+- Similar looking body to request message
+- Contains status codes
+  - `200`: OK
+  - `301`: Moved Permanently
+  - `400`: Bad Request
+  - `404`: Not Found
+  - `505`: Unsupported HTTP Version
+
+### HTTP Web Advanced Features
+
+#### Web cookies
+
+- **Recall:** HTTP `GET` / response interaction is _stateless_
+  - No need for client / server to track state of multi-step exchange
+  - No need for client / server to recover from partially completed transactions
+- Cookies maintain user / server state
+
+#### Web caches (proxy servers)
+
+- **Goal:** satisfy client request without involving origin server
+- User configures browser to point to a web cache (i.e., proxy server)
+- Browser sends all HTTP requests to the cache:
+  - _If_ the object is in the cache: Cache returns the object to the client
+  - _Else_ the cache requests the object from the origin server, caches the
+    received object, then returns the object to the client
+
+#### Conditional `GET`
+
+- **Goal:** Don't send object if cache has up-to-date cached version
+  - No object transmission delay
+  - Lower link utilization
+- Cache: specify date of cached copy in HTTP request
+  - `if-modified-since: <date>`
+- Server: response contains no object if cached copy is up-to-date
+  - `HTTP/1.0 304 Not Modified`
+
+#### HTTP/2
+
+- **Goal:** Decrease delay in multi-object HTTP requests
+- HTTP/1.1 introduced multiple, pipelined `GET`s over a single TCP connection
+- HTTP/2 migrates head-of-line blocking
+  - Smaller objects will not have to wait behind previous, larger objects which
+    are taking longer to download
+- Allows for this by dividing objects into frames and interleaving the frame
+  transmission
+  - Smaller objects are delivered very quickly and initial, large objects are
+    slightly delayed
+- Recovery from packet loss still stalls all object transmissions
+- No security via vanilla TCP connection
+
+#### HTTP/3
+
+- **Goal:** Same as HTTP/2
+- Adds security, per-object error- and congestion-control (more pipelining) over
+  UDP
+  - More on this in the transport layer section
+
+### Internet Application: E-mail
+
+- Mail servers
+  - Includes a mailbox containing incoming messages from the user
+  - Also includes a message queue of outgoing (to be sent) mail messages
+- App-layer protocol: SMTP (simple mail transfer protocol)
+  - Used between mail servers to send email messages
+  - Client: sending mail server
+  - "Server": receiving mail server
+- Uses TCP for reliable transfer
+- Three transfer phases
+  - Handshaking (greeting)
+  - Transfer of messages
+  - Closure

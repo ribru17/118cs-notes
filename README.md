@@ -1,4 +1,4 @@
-# CS 118 Notes
+# CSS 118 Notes
 
 <!-- vim: set spell: -->
 
@@ -21,7 +21,7 @@
   - Network core
     - Internet backbone of interconnected routers
 
-## How are access networks constructed in the first place?
+### How are access networks constructed in the first place?
 
 - Signals carried by EM waves (radio) or within wires (Ethernet)
 - Network core will move bits around access networks to the destination, using
@@ -31,7 +31,7 @@
     algorithms_
   - Forwarding: moves data from router's input to appropriate router output
 
-## How can the internet grow so big?
+### How can the internet grow so big?
 
 - Connecting all access ISPs to each other does not scale ($O(n^{2})$
   connections)
@@ -41,7 +41,7 @@
 - Creating a hierarchical structure is even better as it reduces load and allows
   for regional ISPs
 
-## What is the internet software architecture?
+### What is the internet software architecture?
 
 - It is complex:
   - Many difference pieces running in different places
@@ -68,7 +68,7 @@
     - Processes requests, sends replies
 - Clients and servers are programs at the **application layer**
 
-## TCP: Transmission Control Protocol
+### TCP: Transmission Control Protocol
 
 - A connection is set up between client and server
 - Reliable data transfer
@@ -78,7 +78,7 @@
 - Full-duplex byte stream (in two directions simultaneously)
 - Regulated data flow with flow control and congestion control
 
-## UDP: User Data Protocol
+### UDP: User Data Protocol
 
 - Basic transmission service
   - No connection needed
@@ -87,7 +87,7 @@
 - No ordered deliver guarantee
 - No flow control / congestion control
 
-## Socket APIs
+### Socket APIs
 
 - Socket:
   - An endpoint in inter-process communication across a computer network
@@ -98,7 +98,7 @@
 - Socket port numbers
   - Smaller numbers are reserved and only accessible by super-users
 
-## Caveat: Byte ordering matters
+### Caveat: Byte ordering matters
 
 - Data that is sent in little-endian must be read as such, and vice versa
 - The API defines methods to convert to proper network ordering
@@ -107,13 +107,13 @@
 
 <!-- Lecture 2 -->
 
-## Packet switching
+### Packet switching
 
 - **Store-and-forward** operations inside the network
 - Sending host
   - Takes application message
 
-## Circuit switching
+### Circuit switching
 
 - End-end resources are allocated and reserved for a voice call between source
   and destination
@@ -121,7 +121,7 @@
   - `FDM` does one user at a time
   - `TDM` alternates users over time
 
-## Packet switching vs. Circuit switching
+### Packet switching vs. Circuit switching
 
 - Packet switching allows more users in the network
 - Example: 1 Mb/s link, where each user needs 100 Kb/s when active, and users
@@ -145,7 +145,7 @@
     - Timing or in-order delivery
     - Minimum throughput/speed to deliver data
 
-## Internet software appears in the form of protocols
+### Internet software appears in the form of protocols
 
 - Protocols control sending and receiving messages
   - E.g. HTTP, Skype, TCP, etc.
@@ -154,12 +154,12 @@
 - Organized in layers which cannot only talk to the immediate upper or lower
   layer
 
-## Layering
+### Layering
 
 - Modularization allows for easier maintenance
 - Different layers have their own protocols
 
-### Layers
+#### Layers
 
 - **Application:** Supports network applications
   - FTP, SMTP, HTTP
@@ -171,23 +171,23 @@
   - Ethernet, Wi-Fi, PPP
 - **Physical:** Bits "on the wire"
 
-## How to evaluate the internet
+### How to evaluate the internet
 
 Performance is gauged with three metrics:
 
-### Throughput
+#### Throughput
 
 - Throughput is the rate (bits/time) at which units are transferred
 - End-to-end throughput is equivalent to the bottleneck throughput
 
-### Packet Loss
+#### Packet Loss
 
 - Queue preceding link in buffer has finite capacity
 - Packet arriving to full queue dropped
 - Lost packet may be retransmitted by previous node, by source end system, or
   not at all
 
-### Delay
+#### Delay
 
 - Host sending function:
   - Takes application message
@@ -195,7 +195,7 @@ Performance is gauged with three metrics:
   - Transmits packets across network at rate `R`
   - Packet transmission delay $= \frac{L}{R}$
 
-## Packet Delay
+##### Packet Delay
 
 If arrival rate (in bits) to link exceeds transmission rate for a period of
 time:
@@ -203,7 +203,7 @@ time:
 - Packets will queue and wait to be transmitted on the link
 - Packets can be dropped (lost) if memory (buffer) fills up
 
-### Four Sources of Packet Delay
+###### Four Sources of Packet Delay
 
 - $d_{proc}$: Nodal processing
   - Check bit errors
@@ -517,8 +517,8 @@ There are two types, both with headers terminated by an empty line of `\r\n`:
 #### HTTP/3
 
 - **Goal:** Same as HTTP/2
-- Adds security, per-object error- and congestion-control (more pipelining) over
-  UDP
+- Adds security, per-object error- and congestion-control (more pipe-lining)
+  over UDP
   - More on this in the transport layer section
 
 ### Internet Application: E-mail
@@ -535,3 +535,134 @@ There are two types, both with headers terminated by an empty line of `\r\n`:
   - Handshaking (greeting)
   - Transfer of messages
   - Closure
+
+<!-- Lecture 5 -->
+
+### Domain Name System (DNS)
+
+Provides lookup from domain name (e.g. `www.google.com`) to IP address
+(`173.194.204.99`)
+
+#### DNS Services
+
+- Host name to IP address translation
+- Host aliasing
+  - Canonical, alias names
+- Mail server aliasing
+- Load distribution
+  - Replicated web servers: many IP address correspond to one name
+
+> **Q:** Why not centralize DNS?
+
+- Single point of failure
+- Traffic volume
+- Distant centralized database
+- Maintenance
+- Doesn't scale
+
+#### DNS Structure
+
+- Internet distributed database implemented in hierarchy of many name servers
+- Application-layer DNS protocol: hosts, name servers communicate to resolve
+  names (address / name translation)
+  - Core internet function implemented as application layer protocol
+
+#### Key Concepts
+
+- Names are hierarchical
+  - No flat names (e.g. `university_ucla_cs_kiwi`) for hosts
+  - Only hierarchical names (e.g. `kiwi.cs.ucla.edu`)
+    - Highest hierarchy: `edu`, `com`, `gov`, `org`, ... `us`, `jp`, `fr`, ...
+    - Next-level hierarchy: `ucla`, `mit`, ... `google`, `ibm`, ... `ca`, ...
+    - All are under certain root DNS servers
+  - Hierarchical names form the _hierarchical name space_
+- _Name servers_ (that store and resolve names) are also organized into a
+  hierarchy
+  - Each name server handles a small portion of the name space hierarchy
+- _Name resolution_ follows the hierarchy to resolve names to IP addresses
+
+#### Root DNS servers
+
+- Official, contact-of-last-resort by name servers that cannot resolve name
+- _Incredibly important_ internet function
+  - The internet could not function without it!
+  - DNSSEC
+    - Provides security (authentication and message integrity)
+- ICANN (Internet Corporation for Assigned Names and Numbers) manages root DNS
+  domain
+
+#### Authoritative servers
+
+- TLD (top-level domain) servers
+  - Responsible for `.com`, `.org`, etc.
+  - Part of an authoritative registry
+- Organization's own DNS servers
+  - Can be maintained by organization or service provider
+
+#### Local DNS name servers
+
+- Do not strictly belong to the hierarchy
+- Each ISP (residential, company, university) has one
+  - Also called "default name server"
+- When a host makes a DNS query, it is sent to its local DNS server
+  - Has a local cache of recent name-to-address translation pairs (but may be
+    out of date!)
+  - Acts as a proxy, forwards query to hierarchy
+
+#### DNS Name Resolution
+
+##### Iterated Query
+
+Contacted server replies with the name to contact
+
+> "I don't know this name, but ask this server:"
+
+##### Recursive Query
+
+- Puts burden of name resolution on the contacted name server
+- Heavy load at upper layers of the hierarchy?
+
+#### DNS Records
+
+- Distributed database storing resource records (RR)
+- RR format: `(name, value, type, ttl)`
+  - `ttl` is _time to leave_
+- Entries have different types
+  - **`A`**
+    - `name` is host name
+    - `value` is IP address
+  - **`CNAME`**
+    - `name` is alias name for some "canonical" (the real) name
+      - E.g. `www.ibm.com` is really `servereast.backup2.ibm.com`
+    - `value` is the canonical name
+  - **`NS`**
+    - `name` is the domain (e.g. `foo.com`)
+    - `value` is the host name of the authoritative name server for this domain
+  - **`MX`**
+    - `value` is the name of the mail server associated with `name`
+
+#### Caching, Updating DNS Records
+
+- Any name server can cache the record once it learns
+  - Cache entries timeout (disappear) after some time (TTL)
+  - `TLD` servers are typically cached in local name servers
+    - Thus root name servers are not often visited
+- Cached entries may be out of date (best effort name-to-address translation)
+  - If name host changes IP, it may not be known internet-wide until every TTL
+    is expired!
+
+#### DNS Protocol
+
+Client-server based: DNS _query_ and _reply_ over UDP/TCP
+
+- Message header:
+  - **Identification**: 16 bit number for query, the query reply uses the same
+    number
+  - **Flags**:
+    - Query or reply
+    - Recursion desired
+    - Recursion available
+    - Reply is authoritative
+- _Query_ and _reply_ messages have the same format
+
+### `P2P` File Sharing

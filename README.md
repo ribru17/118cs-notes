@@ -665,4 +665,158 @@ Client-server based: DNS _query_ and _reply_ over UDP/TCP
     - Reply is authoritative
 - _Query_ and _reply_ messages have the same format
 
-### `P2P` File Sharing
+<!-- Lecture 6 -->
+
+### Video Streaming
+
+- Major consumer of internet bandwidth
+
+#### What is video?
+
+- Sequence of images displayed at a constant rate
+  - Each image is an array of pixels arranged by bits
+- Stored using redundancy _within_ and _between_ images to decrease the size
+  needed to encode the image
+  - Spatial (within image)
+  - Temporal (from one image to the next)
+- CBR (constant bit rate): video encoding rate is fixed
+- VBR (variable bit rate): video encoding rate as amount of spatial, temporal
+  storage changes
+
+#### DASH
+
+- Dynamic, Adaptive Streaming over HTTP
+- Server:
+  - Divides video file into multiple chunks
+  - Each chunk is stored, encoded at different rates
+  - _Manifest file_: provides URLs for different chunks
+- Client:
+  - Periodically measures server-to-client bandwidth
+  - Consulting manifest, requests one chunk at a time
+    - Can choose different encoding rates at different times, depending on
+      current bandwidth
+  - Client is "intelligent"; it determines:
+    - **When** to request a chunk (so that buffer starvation or overflow does
+      not occur)
+    - **What encoding rate** to request (higher quality when more bandwidth is
+      available)
+    - Where to request a chunk (can request from a URL server that is close to
+      the client or one that has high bandwidth)
+
+#### CDNs (Content Distribution Networks)
+
+- **Challenge:** How do we stream content at large scales (1M or more
+  simultaneous users)?
+  - **Naive solution:** Have a single, large "mega server."
+    - This is a single point of failure
+    - It would be a point of network congestion
+    - There would be a long path to distant clients
+    - Multiple copies of a video would be sent through outgoing links
+    - This is a non-scalable solution
+  - **Real-world solution:** Store and serve multiple copies of videos at
+    multiple geographically distributed sites (CDNs)
+- How it works
+  - CDN servers store multiple copies of video content at different nodes
+  - Users request content and are redirected to the nearest node (but may select
+    a different one if the nearest node is congested)
+
+## Transport Layer
+
+### Transport Services
+
+- Provide _logical communication_ between application processes running on
+  different hosts
+- Work for two end hosts only
+  - Not internet routers
+- Target _one-to-one_ communication initially
+  - Multi-party group communication was added later
+
+### Transport Protocols
+
+- Transport services are realized by internet transport protocols
+- Protocol actions in end systems:
+  - Sender: breaks application messages into segments, pass to network layer
+  - Receiver: reassembles segments into messages, passes to application layer
+- Only two basic transport protocols: TCP and UDP
+
+#### Transport Layer: Sender Side
+
+- Sender is passed an application-layer message
+- It determines segment header fields values
+- It then creates the segment and passes it to IP
+
+#### Transport Layer: Receiver Side
+
+- Receiver gets segment from IP
+- It checks header values
+- It then extracts the application-layer message
+- Finally it demultiplexes the message up to the application via a socket
+
+### Multiplexing
+
+Multiplex (combine) to-be-sent-out data from different processes together. At
+the sender, it handles data from multiple sockets, adds transport header, and
+passes them all to network layer.
+
+### Demultiplexing
+
+De-aggregate received data streams and relay all data to the intended receiving
+application process. At the receiver, it uses header info to deliver received
+segments to the correct socket.
+
+#### How it works
+
+- Uses IP addresses and port numbers to direct a segment to its appropriate
+  socket
+  - Host receives IP datagrams
+  - Each datagram has a source IP address and a destination IP address
+  - Each datagram carries one transport-layer segment
+  - Each segment has a source port number and a destination port number
+
+There are two types of demultiplexing:
+
+#### Connectionless Demultiplexing
+
+- Used by UDP
+- On sender side:
+  - When creating a socket, must specify host-local port number
+  - When creating a datagram to send into the UDP socket, must specify
+    - Destination IP address
+    - Destination port number
+- When a host receives the UDP segment:
+  - It checks the destination port number in the segment
+  - It directs the UDP segment to the socket with that port number
+  - IP/UDP datagrams with the same destination port number will be directed to
+    the same socket at the receiving host
+    - **NOTE:** They may have different source IP address and/or port numbers.
+
+#### Connection-oriented Demultiplexing
+
+- Used by TCP
+- TCP socket identified by a tuple:
+  - Source IP address
+  - Source port number
+  - Destination IP address
+  - Destination port number
+- Demultiplexing: Receiver uses _all four values_ to direct a segment to the
+  appropriate socket
+- Servers may support many simultaneous TCP sockets:
+  - Each socket is identified by its tuple
+  - Each socket is associated with a different connecting client
+
+### UDP: User Datagram Protocol
+
+- Simplest, "bare bones" internet transport protocol
+- "Best effort" service, UDP segments may be:
+  - Lost
+  - Delivered out-of-order to an application
+- _Connectionless_
+  - No handshaking between UDP sender and receiver
+  - Each UDP segment is handled independently from others
+- Benefits?
+  - No connection establishment (less `RTT` delay)
+  - Simple: no connection state
+  - Small header size
+  - No congestion control
+    - Can fire away information as fast as it wants
+    - Can function in the face of congestion

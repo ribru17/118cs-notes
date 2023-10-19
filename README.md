@@ -820,3 +820,112 @@ There are two types of demultiplexing:
   - No congestion control
     - Can fire away information as fast as it wants
     - Can function in the face of congestion
+- UDP headers are 8 bytes only <!-- Lecture 7 -->
+  - Contain:
+    - Source port number (for demultiplexing)
+    - Destination port number (for demultiplexing)
+    - Length (in bytes) of the UDP segment (including the header)
+    - Checksum
+
+#### Checksum
+
+- Exists to detect errors in the transmitted segment
+- Sender
+  - Treat contents of UDP segment (including header fields and IP addresses) as
+    a sequence of 16-bit integers
+  - Checksum is the sum of the segment content
+    - This value is what is stored in the checksum header field
+- Receiver
+  - Compute checksum of received segment
+  - Check if this value is equal to the given checksum value:
+    - **Not Equal:** Error detected
+    - **Equal:** Assume no errors (though there still may be)
+
+### TCP: Transmission Control Protocol
+
+- Point-to-point
+  - One sender, one receiver
+- Reliable, in-order data transfer
+  - No "message boundaries"
+- Full duplex data transfer
+  - Bidirectional data flow in the same connection
+  - `MSS`: Maximum segment size
+- Connection-oriented
+  - Handshaking (exchange of control messages) initializes sender and receiver
+    state before data exchange
+- Flow controlled
+  - Sender will not overwhelm the receiver
+- Congestion controlled
+  - Sender will not overwhelm the internet
+- Four essential features:
+  - Reliable data transfer
+  - Connection setup and close-down
+  - Flow control
+  - Congestion control
+
+#### Reliable Data Transfer
+
+- Important for internet data delivery
+  - We also have to deal with imperfect packet deliver
+    - With bit errors, dropping packets, out-of-order delivery, duplicate
+      copies, long delay, ...
+- Built using a reliable data transfer channel (which is really an abstraction
+  over the Internet's unreliable data transfer channel)
+- Develop sender and receiver sides of the protocol
+- Consider only unidirectional data transfer (even though control info will flow
+  both ways!)
+- Use finite state machines (`FSM`) to specify sender, receiver
+- `FSM` for `rdt1.0` (reliable data transfer 1.0) over a reliable channel
+  - Underlying channel is perfectly reliable
+    - No bit errors, no loss of packets
+  - _Separate_ `FSM`s for sender and receiver
+    - Sender sends data into the underlying channel
+    - Receiver reads data into the underlying channel
+  - **Starting Scenario:** Stop and wait
+    - Packets are sent one at a time, with the sender not sending the next
+      packet until the previous has been received and acknowledged by the
+      receiver
+- `rdt2.0`: Considers channel with bit errors (unreliable channel)
+  - How do we _detect_ errors?
+    - Checksum algorithm
+  - How do we _recover_ from detected errors?
+    - Acknowledgments (`ACK`s): receiver explicitly tells the sender that packet
+      is received
+    - Negative acknowledgments (`NAK`s): receiver explicitly tells the sender
+      that packet has errors
+    - Sender retransmits upon receiving a `NAK`
+  - **FLAWS:** What happens if `ACK`/`NAK` is corrupted?
+    - Sender doesn't know what happened on the receiver's end, and we can't just
+      resend a packet.
+    - How do we handle duplicates?
+      - Sender retransmits if ACK/NAK is corrupted
+      - Receiver discards (doesn't send to application layer) the duplicate
+        packet
+      - Sender adds _sequence number_ to each packet.
+        - We need this so the client knows whether the packet is a duplicate and
+          it can discard it
+        - This is a characteristic of `rdt2.1`
+        - This sequence number only has to be one bit!
+- `rdt2.0`
+  - Removes `NAK`
+  - `ACK` is _explicitly_ set as the sequence number of the received packet
+  - The negative acknowledgments becomes the `ACK` of the previous packet
+- `rdt3.0`: Channels with errors _and_ loss
+  - Packets can be lost or dropped
+  - How do we stop this?
+    - Sender waits a "reasonable" amount of time for an `ACK`
+    - If no `ACK` is reached in time, the sender will retransmit
+    - If the `ACK` was just delayed, there will be a duplicate send but this
+      doesn't matter since the sequence number already handles this
+
+Table summary of reliable data transfer:
+
+| Version  | Channel              | Mechanism                                                                                |
+| -------- | -------------------- | ---------------------------------------------------------------------------------------- |
+| `rdt1.0` | Reliable channel     | Nothing                                                                                  |
+| `rdt2.0` | Bit errors (no loss) | Error detection via checksum, receiver feedback (`ACK`/`NAK`), retransmission upon `NAK` |
+| `rdt2.1` | Same as 2.0          | Adds sequence number for each segment                                                    |
+| `rdt2.2` | Same as 2.0          | Duplicate `ACK` = `NAK`                                                                  |
+| `rdt3.0` | Bit errors + loss    | Retransmission upon timeout                                                              |
+
+What if the first packet is a `NAK`? **ASK PROFESSOR NEXT CLASS**

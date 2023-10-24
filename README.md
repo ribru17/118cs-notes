@@ -931,3 +931,35 @@ Table summary of reliable data transfer:
 What if the first packet is a `NAK`? Then that means we didn't establish a
 proper connection in the first place (first packet is usually used for this) so
 in this case we will just try to reestablish.
+
+<!-- Lecture 8 -->
+
+### Pipeline sending
+
+There are two main types of pipelined protocols.
+
+#### Go-Back-N
+
+- Receiver buffer size = 1 packet
+- Sender can have up to `N` unacknowledged packets in the pipeline
+- Receiver only sends a _cumulative `ACK`_
+  - Doesn't `ACK` packet if there's a gap
+- Sender has timer for oldest unacknowledged packet
+- Better for smaller buffers because the receiver discards all successful
+  packets that come after one lost packet
+  - Sender resubmits the initial lost packet and again pipelines those that
+    follow
+
+#### Selective Repeat
+
+- Receiver buffer size = N packets
+- Sender can have up to N unacknowledged packets in the pipeline
+- Receiver sends an _individual `ACK`_ for each packet
+- Sender maintains a timer for each unacknowledged packet
+  - When the timer expires, retransmit only that unacknowledged packet
+- Packets that follow a lost packet are acknowledged and must remain in the
+  buffer until the timeout for the lost packet hits, and the sender resends the
+  initial lost packet. After this point all following packets are delivered to
+  the application, and the original `ACK` of the lost packet is finally sent.
+
+### TCP Segment Structure

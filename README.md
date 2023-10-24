@@ -898,7 +898,7 @@ There are two types of demultiplexing:
     - Sender doesn't know what happened on the receiver's end, and we can't just
       resend a packet.
     - How do we handle duplicates?
-      - Sender retransmits if ACK/NAK is corrupted
+      - Sender retransmits if `ACK`/`NAK` is corrupted
       - Receiver discards (doesn't send to application layer) the duplicate
         packet
       - Sender adds _sequence number_ to each packet.
@@ -928,4 +928,6 @@ Table summary of reliable data transfer:
 | `rdt2.2` | Same as 2.0          | Duplicate `ACK` = `NAK`                                                                  |
 | `rdt3.0` | Bit errors + loss    | Retransmission upon timeout                                                              |
 
-What if the first packet is a `NAK`? **ASK PROFESSOR NEXT CLASS**
+What if the first packet is a `NAK`? Then that means we didn't establish a
+proper connection in the first place (first packet is usually used for this) so
+in this case we will just try to reestablish.

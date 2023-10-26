@@ -934,11 +934,11 @@ in this case we will just try to reestablish.
 
 <!-- Lecture 8 -->
 
-### Pipeline sending
+#### Pipeline sending
 
 There are two main types of pipelined protocols.
 
-#### Go-Back-N
+##### Go-Back-N
 
 - Receiver buffer size = 1 packet
 - Sender can have up to `N` unacknowledged packets in the pipeline
@@ -950,7 +950,7 @@ There are two main types of pipelined protocols.
   - Sender resubmits the initial lost packet and again pipelines those that
     follow
 
-#### Selective Repeat
+##### Selective Repeat
 
 - Receiver buffer size = N packets
 - Sender can have up to N unacknowledged packets in the pipeline
@@ -962,4 +962,107 @@ There are two main types of pipelined protocols.
   initial lost packet. After this point all following packets are delivered to
   the application, and the original `ACK` of the lost packet is finally sent.
 
-### TCP Segment Structure
+#### TCP Segment Structure
+
+- Source and destination port numbers (each 16 bits)
+- Sequence number (32 bits)
+- Acknowledgment number (32 bits)
+- Length of header, unused bits, congestion notifications, TCP options, `ACK`
+  bit, `RST`, `SYN`, and `FIN` connection management, flow control, receive
+  window (16 bits, number of bytes the receiver is willing to accept)
+- Checksum (16 bits), `URG` data pointer (16 bits)
+- TCP options
+- Application data
+
+<!-- Lecture 9 -->
+
+#### TCP Timeout Prediction
+
+- Timeout interval is the `EstimatedRTT` plus a safety margin
+  - A larger variation in `EstimatedRTT` demands a larger safety margin
+  - $\text{TimeoutInterval} = \text{EstimatedRTT} + 4 \cdot \text{DevRTT}$
+- `DevRTT` is the safety margin (`EWMA` of `SampleRTT` deviation from
+  `EstimatedRTT`)
+  - $\text{DevRTT} = (1 - \Beta) \cdot \text{DevRTT} + \Beta \cdot
+    |\text{SampleRTT} - \text{EstimatedRTT}|$
+  - $\text{EstimatedRTT} = (1 - \alpha) \cdot \text{EstimatedRTT} + \alpha \cdot
+    \text{EstimatedRTT}$
+
+#### Summary on TCP Reliable Data Transfer
+
+- Header fields used: sequence number, `ACK` number, `ACK` flags, checksum, ...
+- Operations at the sender and the receiver
+  - Fast retransmit is used to enable retransmission (faster than timeout)
+- Timeout estimation algorithm
+  - Based on `RTT` samples (the `RTT` between a sent segment and its received
+    `ACK` at the sender)
+  - Estimated using both mean and variance
+  - Use Karn's algorithm to take segments (ignore all ambiguous segments)
+  - Exponential back-off for multiple retransmission timeouts
+
+#### TCP Connection Management
+
+- 3-way handshake, connection establishment
+  - Client chooses initial sequence number $x$, sends TCP `SYN` message
+    - `SYN` bit = `1`, sequence = $x$
+  - Server chooses initial sequence number $y$, sends TCP `SYNACK` message,
+    acknowledging `SYN`
+    - `SYN` bit = `1`, sequence = $y$, `ACK` bit = `1`, `ACK` number = $x + 1$
+  - Client receives `SYNACK`, indicating the server is live. It sends `ACK` for
+    `SYNACK`; this segment may contain client-to-server data.
+    - `ACK` bit = `1`, `ACK` number = $y + 1$
+  - **NOTE:** $x$ and $y$ are chosen randomly, not just always at zero.
+- 4-way handshake, connection close-down
+  - Client can no longer send data, but can receive it; sends `FIN` bit.
+  - Server acknowledges.
+  - **\*SERVER WILL CLOSE AFTER A TIMER\***
+  - Server again sends, this time `FIN` bit
+  - Client sends a final acknowledgement (signaling) but without data. This is
+    not a connection.
+
+#### TCP Flow Control
+
+- TCP receiver "advertises" free buffer space in `fwnd` field in TCP header
+  - `RcvBuffer` size set via socket options (typical default is 4096 bytes)
+  - Many operating systems auto-adjust `RcvBuffer`
+- The sender limits the amount of unacknowledged "in-flight" data to received
+  `rwnd`
+- This guarantees the receive buffer will not overflow
+- Sender does not transmit faster than receiver's available buffer
+  - It sends its window size as $N \le \text{Receiver's advertised buffer size}$
+
+#### TCP Congestion Control
+
+- Congestion
+  - Informally: too many sources sending too much data too quickly for the
+    network to handle
+  - Manifestations: long delays (queuing in router buffers), packet loss (buffer
+    overflow)
+  - Different from flow control: a _top-10_ problem!
+- TCP increases its sending rate until packet loss occurs at some router's
+  output: the _bottleneck link_
+
+Key issues in TCP congestion control
+
+---
+
+##### How to detect internet congestion in TCP
+
+- _**Key assumption made:**_ All lost TCP segments are due to internet
+  congestion
+  - Negligible transfer corruption errors (because link quality is generally
+    good)
+- Detect congestion == detect segment loss in TCP
+- How do we detect this?
+  - TCP timeout event _(or)_
+  - TCP sender receives three duplicate `ACK`s (a la fast retransmit)
+
+##### How to react to congestion or non-congestion
+
+- <u>Golden rule:</u> `AIMD` rule (additive increase, multiplicative decrease)
+  - Additive increase: increase sending rate linearly until congestion/loss is
+    detected
+  - Multiplicative decrease: reduce sending rate by 50% after loss is detected
+  - Results in "sawtooth" behavior
+
+##### How to improve TCP throughput while controlling congestion

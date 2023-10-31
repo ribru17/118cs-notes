@@ -849,7 +849,7 @@ There are two types of demultiplexing:
   - No "message boundaries"
 - Full duplex data transfer
   - Bidirectional data flow in the same connection
-  - `MSS`: Maximum segment size
+  - **`MSS`**: Maximum segment size
 - Connection-oriented
   - Handshaking (exchange of control messages) initializes sender and receiver
     state before data exchange
@@ -983,7 +983,7 @@ There are two main types of pipelined protocols.
   - $\text{TimeoutInterval} = \text{EstimatedRTT} + 4 \cdot \text{DevRTT}$
 - `DevRTT` is the safety margin (`EWMA` of `SampleRTT` deviation from
   `EstimatedRTT`)
-  - $\text{DevRTT} = (1 - \Beta) \cdot \text{DevRTT} + \Beta \cdot
+  - $\text{DevRTT} = (1 - \beta) \cdot \text{DevRTT} + \beta \cdot
     |\text{SampleRTT} - \text{EstimatedRTT}|$
   - $\text{EstimatedRTT} = (1 - \alpha) \cdot \text{EstimatedRTT} + \alpha \cdot
     \text{EstimatedRTT}$
@@ -1066,3 +1066,49 @@ Key issues in TCP congestion control
   - Results in "sawtooth" behavior
 
 ##### How to improve TCP throughput while controlling congestion
+
+<!-- Lecture 10 -->
+
+- `AIMD` rule has problems
+  - We need to jump-start the initial sending rate
+    - **Idea:** Exponential sending increase
+  - Decreasing the sending rate by 50% is still too slow
+    - **Idea:** Reset sending to smallest value upon heavy congestion
+
+##### Congestion Control Algorithms
+
+> **NOTE:** `cwnd` is the congestion window, in bytes.
+>
+> And as a reminder, **`MSS`** is the maximum segment size.
+
+###### TCP Slow Start Algorithm
+
+- **Initialization:** When TCP starts, $\text{cwnd} \le 2 \text{MSS}$
+  - Typically we set it to $1 \text{MSS}$.
+  - Example: $\text{MSS} = 500\text{B}$, $\text{RTT} = 200\text{ms}$
+    - Then initial rate is 20 kbps
+- Remark: Available bandwidth may be $\gg \text{MSS}$
+  - It is desirable to quickly ramp up to the respectable rate
+- **When to stop:** Increase sending rate exponentially quickly until `cwnd`
+  reaches a threshold (slow-start-threshold `ssthresh`)
+- Example: Start sending one segment, then two, then four, etc.
+
+###### Congestion Avoidance Algorithm
+
+- Increase `cwnd` by 1 `MSS` per `RTT` until congestion (loss) is detected
+
+###### Fast Retransmit, Fast Recovery
+
+- Observe the `AIMD` rule by reducing when loss is detected by receiving third
+  duplicate TCP `ACK`.
+- **Fast retransmit:** When receiving multiple duplicate `ACK`s
+  - Use 3 duplicate `ACK`s to infer packet loss
+  - Retransmit the lost segment
+  - Set $\text{ssthresh} = max(\frac{\text{cwnd}}{2}, 2\text{MSS})$
+  - $\text{cwnd} = \text{ssthresh} + 3 \text{MSS}$
+- **Fast recovery:** Governs the transmission of new data until a non-duplicate
+  `ACK` arrives
+  - $\text{cwnd} = \text{cwnd} + 1 \text{MSS}$
+
+> **WARNING!** Don't increase `cwnd` for only 1 or 2 duplicate `ACK`s. This
+> allows for transient out-of-order delivery.

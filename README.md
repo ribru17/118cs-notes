@@ -1112,3 +1112,32 @@ Key issues in TCP congestion control
 
 > **WARNING!** Don't increase `cwnd` for only 1 or 2 duplicate `ACK`s. This
 > allows for transient out-of-order delivery.
+
+<!-- Lecture 11 -->
+
+## Network Layer: The Data Plane
+
+### Network Layer Services
+
+- Now hop by hop (not end-to-end anymore)
+- There are two key functions:
+  - **Forwarding**
+    - Move packets from a router's input link to an appropriate router output
+      link
+    - Analogous to getting through a single interchange in a trip
+  - **Routing**
+    - Determine route taken by packets from source to destination
+    - Analogous to planning a trip from a source to a destination
+- Data plane
+  - Data forwarding
+  - _Local_, per-router function
+  - Determines how the datagram arriving on router input port is forwarded to
+    the router output port
+- Control plane
+  - Routing
+  - _Network-wide_ logic
+  - Determines how datagram is routed among routers along end-to-end path from
+    the source host to the destination host
+  - Two control-plane approaches:
+    - _Traditional routing algorithms:_ Implemented in routers
+    - _Software-defined networking (`SDN`):_ Implemented in remote servers

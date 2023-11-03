@@ -1110,6 +1110,13 @@ Key issues in TCP congestion control
   `ACK` arrives
   - $\text{cwnd} = \text{cwnd} + 1 \text{MSS}$
 
+###### Retransmission Timeout
+
+- When retransmission timer expires
+  - $\text{ssthresh} = max(\frac{\text{cwnd}}{2}, 2 \text{MSS})$
+    - `cwnd` (in bytes) should be in-flight size, to be more accurate
+- Resetting because heavy loss/congestion was detected
+
 > **WARNING!** Don't increase `cwnd` for only 1 or 2 duplicate `ACK`s. This
 > allows for transient out-of-order delivery.
 

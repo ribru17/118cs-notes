@@ -1115,6 +1115,7 @@ Key issues in TCP congestion control
 - When retransmission timer expires
   - $\text{ssthresh} = max(\frac{\text{cwnd}}{2}, 2 \text{MSS})$
     - `cwnd` (in bytes) should be in-flight size, to be more accurate
+  - $\text{cwnd} = 1 \text{MSS}$
 - Resetting because heavy loss/congestion was detected
 
 > **WARNING!** Don't increase `cwnd` for only 1 or 2 duplicate `ACK`s. This

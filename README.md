@@ -1228,3 +1228,123 @@ Key issues in TCP congestion control
   - Violates end-to-end argument (port number manipulation by network-layer
     device)
   - NAT traversal: what if the client wants to connect to a server behind NAT?
+
+<!-- Lecture 13 -->
+
+#### `IPv6`
+
+- Motivation:
+  - Primary: 32-bit `IPv4` address space would be completely allocated
+  - Additional:
+    - Speed of processing/forwarding: 40-byte fixed length header (`IPv4` was
+      variable length)
+    - Enable different network-layer treatment of "flows"
+- 40-byte basic header
+  - **Priority**: identify priority among datagrams in flow
+  - **Flow label**: identify datagrams in the same "flow"
+    - A "flow" is a group of packets, e.g. a TCP connection or media stream
+  - **Next header**: identify upper layer protocol for data
+  - Source address (128 bits)
+  - Destination Address (128 bits)
+  - Payload (data)
+  - Missing (compared to `IPv4`):
+    - No checksum (to speed router processing)
+    - No fragmentation/reassembly
+    - No options (available as upper-layer, next-header protocol at router)
+- Other changes from `IPv4`
+  - Checksum: removed entirely to reduce processing time at each hop
+  - Options: allowed, but outside of header, indicated by "next header" field
+  - `ICMPv6`: new version of `ICMP`
+    - Additional message types, e.g. "Packet Too Big"
+    - Multicast group management functions
+- Next header and extension headers
+  - Next header: identify upper layer protocol
+    - Usually the transport layer protocol used by a packet's payload
+    - When extension headers are present, this field indicates which extension
+      header follows
+  - Extension headers: carry optional internet layer info placed between the
+    fixed header and the upper-layer protocol header
+    - Extension headers form a chain, using the _next header_ fields. The _next
+      header_ field in the fixed header indicates the type of the first
+      extension header.
+    - The _Next Header_ field of the last extension header indicates the type of
+      the upper-layer protocol header in the payload of the packet.
+    - All extension headers are a multiple of 8 bytes
+
+#### Transition from `IPv4` to `IPv6`
+
+- Not all routers can be upgraded simultaneously
+  - No "flag days"
+  - How will the network operate with mixed `IPv4` and `IPv6` routers?
+- **Tunneling:** `IPv6` datagram carried as payload in `IPv4` datagram among
+  `IPv4` routers ("packet within a packet")
+  - Tunneling used extensively in other contexts (4G/5G)
+
+### How Routers Work
+
+#### Input port functions
+
+- Physical layer: bit-level reception
+- Link layer: e.g. Ethernet
+- Decentralized switching:
+  - Using header field values, lookup output port using forwarding table-in
+    input port memory ("match plus action")
+  - Destination-based forwarding: forward based only on destination IP address
+    (traditional)
+    - Match longest prefix
+      - When looking for a forwarding table entry for a given destination
+        address, use the longest address prefix that matches the destination
+        address.
+      - Longest prefix matching is often performed using ternary content
+        addressable memories (`TCAM`s)
+  - Generalized forwarding: forward based on any set of header field values
+
+## Network Layer: Control Plane
+
+### Routing
+
+#### Per-router control plane
+
+Individual routing algorithm components _in each and every router_ interact in
+the control plane
+
+#### Routing algorithms
+
+- Goal: determine "good" paths (equivalently, routes) from sending hosts to
+  receiving host, through a network of routers
+  - Path: sequence of routers packets traverse from the given initial source
+    host to the final destination host
+  - "Good": least cost, fastest, least congested
+- Abstractions
+  - View as a graph
+  - Information
+    - **Global:** All routers have complete topology, link cost info
+      - "Link state" algorithms
+    - **Decentralized:** Iterative process of computation, exchange of info with
+      neighbors
+      - Routers initially only know link costs to attached neighbors
+      - "Distance vector" algorithms
+      - First majorly used algorithm in the early internet
+  - Router change
+    - **Static:** routes change slowly over time
+    - **Dynamic:** routes change more quickly
+      - Periodic updates or in response to link cost changes
+
+##### Dijkstra's algorithm for link state routing
+
+- Algorithm complexity: $n$ nodes
+  - Each of the $n$ iterations: need to check all nodes $w \not\in n$
+  - $O(n^{2})$ complexity
+  - Possible more efficient implementation: $O(n\log n)$
+- Message complexity:
+  - Each router must broadcast its link state information to other $n$ routers
+  - Efficient broadcast algorithms: $O(n)$ link crossings to disseminate a
+    broadcast message from one source
+  - Each router's message crosses $O(n)$ links for an overall message complexity
+    of $O(n^{2})$
+- Oscillations are possible for certain routing metrics (say, traffic load)
+  - When link costs depend on traffic volume, route oscillations are possible
+  - Sample scenario:
+    - Routing to destination $a$, traffic entering at $d, c, e$ with rates $1, e
+      < 1, 1$
+    - Link costs are directional and volume-dependent

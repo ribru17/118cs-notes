@@ -1149,3 +1149,82 @@ Key issues in TCP congestion control
   - Two control-plane approaches:
     - _Traditional routing algorithms:_ Implemented in routers
     - _Software-defined networking (`SDN`):_ Implemented in remote servers
+
+<!-- Lecture 12 -->
+
+### IP Protocol
+
+#### IP header fields
+
+- Protocol version number
+- Header length (bytes)
+- "Type" of service
+- Datagram length (bytes)
+- TTL: remaining max hops (decremented at each router)
+- Upper layer protocol (TCP or UDP)
+- Header checksum
+- Source IP address (32 bits)
+- Destination IP address (32 bits)
+- Options (if any) (e.g. time-stamp, record route taken)
+- Payload data
+
+#### IP addressing
+
+- IP address: 32-bit identifier associated with each network (host or router)
+  interface
+- Network interface: connection between host/router and physical link
+  - Routers typically have multiple interfaces
+  - Host typically has one or two interfaces (e.g. wired (Ethernet), wireless)
+
+#### Subnets
+
+- What is a subnet?
+  - Device interfaces that can physically reach each other without passing
+    through an intervening router
+- IP addresses have structure:
+  - **Subnet part**: Devices in the same subnet have common high order bits
+  - **Host part**: Remaining low order bits
+
+#### `CIDR`
+
+- Classless Inter-Domain Routing
+  - Subnet portion of address of arbitrary length
+  - Address format: `a.b.c.d/x`, where `x` is the number of bits in the subnet
+    portion of the address
+
+#### DHCP
+
+- Dynamic Host Configuration Protocol
+- Goal: Host _dynamically_ obtains IP address from network server when it joins
+  the network
+  - Can renew its lease on address in use
+  - Allows reuse of addresses (only hold address while connected/on)
+  - Support for mobile users who join/leave network
+- How to broadcast?
+  - Use the special address for IP broadcast: `255.255.255.255`
+- How to start without a valid IP address?
+  - Use `0.0.0.0` (reserved, special-purpose address for "this host, this
+    network")
+- Can return more than just allocated IP address on a subnet:
+  - Address of first-hop router for client
+  - Name and IP address of DNS server
+  - Network mask (indicating network versus host portion of address)
+
+#### NAT
+
+- Network address translation
+- All devices in local network share just one `IPv4` address as far as the
+  outside word is concerned
+  - All datagrams _leaving_ the local network have the same NAT IP address, but
+    _different_ source port numbers
+- Implementation: NAT router must (transparently):
+  - Replace source IP address, port number of every outgoing datagram to the NAT
+    IP address and new port number
+    - Remote clients/servers will respond using the NAT IP address and the new
+      port number as the destination address
+- Has been controversial:
+  - Routers "should" only process up to layer 3
+  - Address "shortage" should be solved by `IPv6`
+  - Violates end-to-end argument (port number manipulation by network-layer
+    device)
+  - NAT traversal: what if the client wants to connect to a server behind NAT?

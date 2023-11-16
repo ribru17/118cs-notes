@@ -4,7 +4,7 @@
 
 <!-- Lecture 1 -->
 
-## What is the internet?
+## What is the Internet?
 
 - Three components:
   - Hosts (end systems)
@@ -31,7 +31,7 @@
     algorithms_
   - Forwarding: moves data from router's input to appropriate router output
 
-### How can the internet grow so big?
+### How can the Internet grow so big?
 
 - Connecting all access ISPs to each other does not scale ($O(n^{2})$
   connections)
@@ -41,7 +41,7 @@
 - Creating a hierarchical structure is even better as it reduces load and allows
   for regional ISPs
 
-### What is the internet software architecture?
+### What is the Internet software architecture?
 
 - It is complex:
   - Many difference pieces running in different places
@@ -171,7 +171,7 @@
   - Ethernet, Wi-Fi, PPP
 - **Physical:** Bits "on the wire"
 
-### How to evaluate the internet
+### How to evaluate the Internet
 
 Performance is gauged with three metrics:
 
@@ -227,7 +227,7 @@ time:
 
 ### Creating a network app
 
-- We need to incorporate different machines communicating across the internet
+- We need to incorporate different machines communicating across the Internet
 - We can do this several ways:
   - Client-server paradigm
     - Server
@@ -585,7 +585,7 @@ Provides lookup from domain name (e.g. `www.google.com`) to IP address
 
 - Official, contact-of-last-resort by name servers that cannot resolve name
 - _Incredibly important_ internet function
-  - The internet could not function without it!
+  - The Internet could not function without it!
   - DNSSEC
     - Provides security (authentication and message integrity)
 - ICANN (Internet Corporation for Assigned Names and Numbers) manages root DNS
@@ -856,7 +856,7 @@ There are two types of demultiplexing:
 - Flow controlled
   - Sender will not overwhelm the receiver
 - Congestion controlled
-  - Sender will not overwhelm the internet
+  - Sender will not overwhelm the Internet
 - Four essential features:
   - Reliable data transfer
   - Connection setup and close-down
@@ -1348,3 +1348,93 @@ the control plane
     - Routing to destination $a$, traffic entering at $d, c, e$ with rates $1, e
       < 1, 1$
     - Link costs are directional and volume-dependent
+
+<!-- Lecture 14 -->
+
+##### Bellman-Ford algorithm for distance vector routing
+
+- Let $D_{x}(y)$ be the cost of the least-cost path from $x$ to $y$. Then:
+  - $D_{x}(y) = min_{v}(\text{Cost from x to v} + D_{v}(y))$
+    - **NOTE:** $min_{v}$ is the minimum taken over all neighbors $v$ of $x$
+- Description:
+  - **Iterative, asynchronous**
+    - Each local iteration is caused by either:
+      - A local link cost change
+      - A distance vector update message from a neighbor
+  - **Distributed, Self-stopping**
+    - Each node notifies neighbors _only_ when its distance vector changes
+      - Neighbors then notify their neighbors, _only if necessary_
+      - No notifications received, no actions taken!
+  - For each node:
+    - **Wait** for a change in local link cost or message from a neighbor
+    - **Recompute** distance value estimates using distance value received from
+      neighbor
+    - **If** distance value to any destination has changed, notify neighbors
+- Can have router loops which can cause issues
+
+##### Comparison of `LS` and `DV` algorithms
+
+- Message complexity
+  - `LS`: $n$ routers, $O(n^{2})$ messages sent
+  - `DV`: Exchange between neighbors, convergence time varies
+- Speed of convergence
+  - `LS`: $O(n^{2})$ algorithm, $O(n^{2})$ messages
+    - May have oscillations
+  - `DV`: convergence time varies
+    - May have routing loops
+    - Count-to-infinity problem
+- Robustness: what happens if the router malfunctions or is compromised?
+  - `LS`
+    - Router can advertise incorrect link cost
+    - Each router computes only its own table
+  - `DV`
+    - Distance vector router can advertise incorrect path cost
+      - "I have a really low cost path to everywhere": black-holing
+    - Each router's table is used by others: errors propagate through the
+      network
+
+#### Making internet routing scalable
+
+- Our routing study thus far (idealized):
+  - All routers are identical
+  - Network is "flat"
+- This is not true in practice
+- **Scale:** billions of destinations:
+  - We can't store all destinations in routing tables!
+  - Routing table exchange would swamp links!
+- Solution approach:
+  - Aggregate routers into regions known as "autonomous systems", or "domains"
+  - Intra-AS (aka "intra-domain")
+    - Routing in the same AS network
+    - All routers in the AS must run the same intra-domain protocol
+    - Routers in different AS can run different intra-domain routing protocols
+
+##### Intra-AS routing
+
+- Most common intra-AS routing protocols:
+  - `RIP`: Routing Information Protocol
+    - Classic distance vector: distance vectors exchanged every 30 seconds
+  - `EIGRP`: Enhanced Interior Gateway Routing Protocol
+    - Distance vector based
+    - Formerly Cisco-proprietary for decades (became open in 2013)
+  - `OSPF`: Open Shortest Path First
+    - Link-state routing
+    - IS-IS protocol (ISO standard, not RFC standard) essentially the same as
+      `OSPF`
+    - This is the dominating protocol
+
+##### Inter-AS routing
+
+- `BGP` (Border Gateway Protocol)
+  - De facto inter-domain routing protocol
+  - "Glue that holds the Internet together"
+- How Inter differs from Intra?
+  - **Policy**:
+    - Inter-AS: admin wants control over how its traffic is routed, and who
+      routes through its network
+    - Intra-AS: single admin so policy is less of an issue
+  - **Scale**:
+    - Hierarchical routing saves table size, reduced update traffic
+  - **Performance**:
+    - Intra-AS: can focus on performance
+    - Inter-AS: policy dominates over performance

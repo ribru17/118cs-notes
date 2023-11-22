@@ -1161,7 +1161,7 @@ Key issues in TCP congestion control
 - "Type" of service
 - Datagram length (bytes)
 - TTL: remaining max hops (decremented at each router)
-- Upper layer protocol (TCP or UDP)
+- Upper layer protocol (TCP (6) or UDP (17) most common values)
 - Header checksum
 - Source IP address (32 bits)
 - Destination IP address (32 bits)
@@ -1438,3 +1438,55 @@ the control plane
   - **Performance**:
     - Intra-AS: can focus on performance
     - Inter-AS: policy dominates over performance
+
+<!-- Lecture 15 -->
+
+###### `BGP`
+
+- Allows a subnet to advertise its existence, and who it can reach, to the rest
+  of the internet
+- Allows an AS to determine good routes to other subnets based on _reachability
+  information_ and _policy_
+- `BGP` Session:
+  - Two `BGP` routers ("peers") exchange `BGP` messages over a semi-permanent
+    TCP connection
+  - Advertises paths to different destination network prefixes
+    - Message types:
+      - `OPEN`: Opens the TCP connection to the peer and authenticates the
+        sender
+      - `UPDATE`: Advertises a new path (or withdraws an old one)
+      - `KEEPALIVE`: Keeps the connection alive in the absence of updates, also
+        `ACK`s the `OPEN` request
+      - `NOTIFICATION`: Reports errors in the previous message, also used to
+        close the connection
+  - Two types of `BGP` sessions:
+    - External (`eBGP`): Obtain subnet reachability information from each
+      neighboring AS.
+    - Internal (`iBGP`): Propagate reachability information to all AS-internal
+      routers.
+- Routing process for `BGP`:
+  1. Routes received from each neighboring AS
+  2. Import policy engine: accept, deny, set preferences
+  3. Decision process: select the best route (use `BGP` table)
+  4. Routes are used by the router (use IP routing table)
+  5. Export the policy engine: forward, don't forward...
+  6. Done! Routes are advertised to each neighboring AS
+- `BGP` advertised route: **prefix** + **attributes**
+  - Prefix: destination being advertised (i.e., destination subnet ID)
+  - Two important attributes:
+    - `AS-PATH`: List of each AS through which prefix advertisement has
+      traversed
+    - `NEXT-HOP`: Indicates specific internal-AS router to next-hop AS
+- `BGP` route selection
+  - Router may learn more than one route to destination AS, and selections the
+    route based on:
+    - Local preference value attribute: policy decision
+    - Shortest `AS-PATH`
+    - Closest `NEXT-HOP` router: hot potato routing
+    - Additional criteria
+- Achieving policy-based routing
+  - Use path selection by multiple metrics (say, preference)
+    - Not necessarily always choosing the shortest path
+  - Gateway receiving the advertisement uses _import policy_ to accept/reject a
+    path
+  - AS policy also determines whether to advertise its path to another AS

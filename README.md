@@ -593,7 +593,7 @@ Provides lookup from domain name (e.g. `www.google.com`) to IP address
 
 #### Authoritative servers
 
-- TLD (top-level domain) servers
+- `TLD` (top-level domain) servers
   - Responsible for `.com`, `.org`, etc.
   - Part of an authoritative registry
 - Organization's own DNS servers
@@ -679,8 +679,8 @@ Client-server based: DNS _query_ and _reply_ over UDP/TCP
   needed to encode the image
   - Spatial (within image)
   - Temporal (from one image to the next)
-- CBR (constant bit rate): video encoding rate is fixed
-- VBR (variable bit rate): video encoding rate as amount of spatial, temporal
+- `CBR` (constant bit rate): video encoding rate is fixed
+- `VBR` (variable bit rate): video encoding rate as amount of spatial, temporal
   storage changes
 
 #### DASH
@@ -997,7 +997,7 @@ There are two main types of pipelined protocols.
   - Based on `RTT` samples (the `RTT` between a sent segment and its received
     `ACK` at the sender)
   - Estimated using both mean and variance
-  - Use Karn's algorithm to take segments (ignore all ambiguous segments)
+  - Use `Karn`'s algorithm to take segments (ignore all ambiguous segments)
   - Exponential back-off for multiple retransmission timeouts
 
 #### TCP Connection Management
@@ -1192,7 +1192,7 @@ Key issues in TCP congestion control
   - Address format: `a.b.c.d/x`, where `x` is the number of bits in the subnet
     portion of the address
 
-#### DHCP
+#### `DHCP`
 
 - Dynamic Host Configuration Protocol
 - Goal: Host _dynamically_ obtains IP address from network server when it joins
@@ -1490,3 +1490,187 @@ the control plane
   - Gateway receiving the advertisement uses _import policy_ to accept/reject a
     path
   - AS policy also determines whether to advertise its path to another AS
+
+<!-- Lecture 16 -->
+
+## Link Layer
+
+- Overview
+  - Hosts and routers are nodes
+  - Communication channels that connect adjacent nodes along communication
+    paths: links
+    - Wired
+    - Wireless
+    - LAN
+  - Layer-to-packet: uses a frame which encapsulates the datagram
+  - **NOTE:** The link layer has the responsibility of transferring the datagram
+    from one node to a physically adjacent node over a link
+- Context
+  - IP datagram transferred by different access networks (i.e. different link
+    protocols over different links, e.g. WiFi on the first link, Ethernet on the
+    next)
+  - Each link protocol provides different services
+    - May or may not provide reliable data transfer over each link
+- Services
+  - Framing, link access
+    - Encapsulate the datagram into a frame, adding header, trailer
+    - Channel access if shared medium
+    - "MAC" addresses in frame headers identify source, destination (different
+      from IP address!)
+  - Improved delivery quality between adjacent nodes
+    - We already know how to do this!
+      - Mechanisms for reliable data transfer
+    - Seldom used on low bit-error links
+    - Wireless links: high error rates
+      - Why need link-level error recovery in addition to TCP reliable data
+        transfer?
+  - Flow control
+    - Pacing between adjacent sending and receiving nodes
+  - Error detection
+    - Errors caused by signal attenuation, noise
+    - Receiver detects errors, signals retransmission, or drops frame
+  - Error correction
+    - Receiver identifies and corrects bit errors without retransmission
+  - Half-duplex and full-duplex
+    - With half duplex, nodes at both ends of the link can retransmit, but not
+      at the same time
+- Where is the link layer implemented
+  - In each-and-every host
+  - Link layer is implemented in a network interface card (`NIC`) or on a chip
+    - Ethernet, WiFi card, or chip
+    - Implements link, physical layer
+  - Attaches into host's system buses
+  - Combination of hardware, software, firmware
+
+### Error detection
+
+- Overall flow
+  - `EDC`: error detection and correction bits (e.g. redundancy)
+  - D: data protected by error checking, may include header fields
+  - Error detection is not 100% reliable!
+    - Protocol may miss some errors, but rarely
+    - Larger `EDC` fields yield better detection and correction
+- Three different types
+
+#### Parity checking
+
+- Single bit parity: detects single bit errors
+- Two-dimensional bit parity: Detect _and correct_ single bit errors
+- (Parity is the even or oddness of the sequence of bits)
+
+#### Internet checksum (review)
+
+- Goal: Detect errors (i.e. flipped bits) in a transmitted segment
+- Sender:
+  - Treat contents of UDP segment as sequence of 16-bit integers
+  - Checksum: addition (one's complement sum) of the segment content
+  - Checksum value is put into the UDP checksum field
+- Receiver:
+  - Compute checksum of received segment
+  - Check if computed checksum equals the checksum field value
+
+#### Cyclic Redundancy Check (CRC)
+
+- More powerful error-detection coding
+- D: data bits (as a binary number)
+- G: bit pattern (generator), of $r+1$ bits
+- Goal: choose $r$ CRC bits, $R$, such that $<D, R>$ is exactly divisible by G
+  (mod 2)
+  - Receiver knows G, divides $<D, R>$ by G. If there is a non-zero remainder,
+    an error was detected
+  - Can detect all burst errors less than $r+1$ bits
+  - Widely used in practice (Ethernet, 802.11 WiFi)
+
+### Multiple access protocols
+
+- Single shared broadcast channel
+- Two or more simultaneous transmissions by nodes: interference
+- Idea multiple access protocol:
+  - Given: multiple access channel (MAC) of rate $R$ bps
+  - Desiderata:
+    - When one node wants to transmit, it can send at rate $R$
+    - When $M$ nodes want to transmit, each send at average rate $\frac{R}{M}$
+    - Fully decentralized:
+      - No special node to coordinate transmissions
+      - No synchronizations of clocks, slots
+    - Simple
+- Taxonomy
+  - Channel partitioning
+    - Divide channel into smaller "pieces" (time slots, frequency, code)
+    - Allocate piece to node for exclusive use
+  - Random access
+    - Channel not divided, allow collisions
+    - "Recover" from collisions
+  - Taking turns
+    - Nodes take turns, but nodes with more to send can take longer turns
+
+#### Random access protocols
+
+- When node has packet to send
+  - Transmit at full channel rate $R$
+  - No _a priori_ coordination among nodes
+- Two or more transmitting nodes: "collision"
+- Random access MAC protocol specifies:
+  - How to detect collisions
+  - How to recover from collisions (e.g. via delayed retransmissions)
+- Examples of random access MAC protocols:
+  - ALOHA, slotted ALOHA
+  - `CSMA`, `CSMA/CD`, `CSMA/CA`
+
+##### Slotted ALOHA
+
+- Assumptions:
+  - All frames are the same size
+  - Time is divided into equal size slots (time to transmit one frame)
+  - Nodes start to transmit only slot beginning
+  - Nodes are synchronized
+  - If two or more nodes transmit in slot, all nodes detect collision
+- Operation:
+  - When node obtains fresh frame, transmits in next slot
+    - _If no collision:_ Node can send new frame in next slot
+    - _If collision:_ Node retransmits frame in each subsequent slot with
+      probability $p$ until success
+- Pros:
+  - Single active node can continuously transmit at full rate of channel
+  - Highly decentralized: only slots in nodes need to be in sync
+  - Simple
+- Cons:
+  - Collisions, wasting slots
+  - Idle slots
+  - Nodes may be able to detect collision in less than time to transmit packet
+  - Clock synchronization
+- Efficiency:
+  - Suppose there are $N$ nodes with many frames to send, each transmits in slot
+    with probability $p$
+    - Probability that a given node has success in a slot is $p(1-p)^{N-1}$
+    - Probability that a _any_ node has success in a slot is $Np(1-p)^{N-1}$
+    - Max efficiency: find $p^{\ast}$ that maximizes $Np(1-p)^{N-1}$
+    - For many nodes, take the limit of $Np^{\ast}(1-p)^{N-1}$ as $N$ goes to
+      infinity, gives: **Max efficiency is $\frac{1}{e} = 0.37$**
+  - At best: A channel used for useful transmissions 37% of the time!
+
+##### Pure ALOHA
+
+- Not slotted, simpler, synchronization
+  - When first frame arrives, transmit immediately
+- Collision probability increases with no synchronization
+  - Frame sent at $t_0$ collides with other frames sent in $[t_0-1,t_0+1]$
+- Only 18% ($\frac{1}{2e}$) efficient!
+
+##### `CSMA` (carrier sense multiple access)
+
+- Simple `CSMA`: listen before transmit
+  - If channel sensed idle: transmit entire frame
+  - If channel sensed busy: defer transmission
+  - Human analogy: don't interrupt others!
+- `CSMA/CD`: `CSMA` with _collision detection_
+  - Collisions detected within short time
+  - Colliding transmissions aborted, reducing channel wastage
+  - Collision detection easy in wired, difficult with wireless
+  - Human analogy: polite conversationalist
+- Collisions can still occur
+  - Propagation delay means two nodes may not hear each other's just-started
+    transmission
+  - On collision, the entire packet and transmission time is wasted
+    - Distance and propagation delay play a role in determining collision
+      probability

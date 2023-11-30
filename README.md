@@ -1674,3 +1674,99 @@ the control plane
   - On collision, the entire packet and transmission time is wasted
     - Distance and propagation delay play a role in determining collision
       probability
+
+<!-- Lecture 17 -->
+
+#### MAC Addresses
+
+- 32-bit IP address:
+  - **Network-layer** address for interface
+  - Used for layer 3 (network layer) forwarding
+- MAC (or LAN or physical or Ethernet) address:
+  - Function: used "locally" to get frame from one interface to another
+    physically-connected interface (same subnet, in IP-addressing sense)
+  - 48-bit MAC address (for most **LAN**s) burned in `NIC` ROM, also sometimes
+    software settable
+  - E.g. `1A-2F-BB-76-09-AD`
+- Each interface on LAN has a unique MAC address
+
+##### `ARP`: Address Resolution Protocol
+
+- `ARP` table: each IP node (host, router) on LAN has a table
+  - IP/MAC address mappings for some LAN nodes:
+    - `<IP address; MAC address; TTL>`
+      - TTL is time to live (time before address mapping will be forgotten),
+        usually 20 minutes
+- If addresses are not in a node's `ARP` table, it must broadcast an `ARP` query
+  for that information
+
+### Ethernet
+
+- "Dominant" wired LAN technology:
+  - First widely used LAN technology
+  - Simpler, cheap
+  - Kept up with speed race: 10 Mbps - 400 Gbps
+  - Single chip, multiple speeds
+  - Unreliable, connectionless
+    - No handshaking between sending and receiving `NIC`s
+    - Receiving `NIC` doesn't send `ACK`s or `NAK`s to sending `NIC`
+      - Data in dropped frames recovered only if initial sender uses higher
+        layer `rdt` (e.g. TCP), otherwise it is lost
+  - Ethernet's MAC protocol: unslotted `CSMA/CD` with binary backoff
+
+#### Physical Topology
+
+- Bus: popular through mid 90s
+  - All nodes in same collision domain (can collide with each other)
+- Switched: prevails today
+  - Active link-layer 2 switch in center
+  - Each "spoke" runs a separate Ethernet protocol (nodes do not collide with
+    each other)
+
+#### Ethernet Frame Structure
+
+- Sending interface encapsulates IP datagram (or other network layer protocol
+  packet) in Ethernet frame
+  - Preamble
+    - Used to synchronize receiver, sender clock rates
+    - 7 bytes of `10101010` followed by one byte of `10101011`
+  - Destination address
+    - MAC address, 6 bytes
+    - Adapter discards frame if not a matching destination address (or broadcast
+      address for, e.g., an `ARP` packet)
+  - Source address
+    - MAC address, 6 bytes
+  - Type
+    - Indicates higher layer protocol (mostly IP but others possible, like
+      `Novell IPX`, `AppleTalk`)
+    - Used to demultiplex up at the receiver
+  - Data (payload)
+  - CRC (for error detection)
+    - Cyclic redundancy check at receiver
+    - Frame is dropped if error detected
+
+#### Ethernet Switch
+
+- Switch is a link-layer device: takes an _active_ role
+  - Store, forward Ethernet frames
+  - Examine incoming frame's MAC address, selectively forward frame to
+    one-or-more outgoing links when frame is to be forwarded on segment, uses
+    `CSMA/CD` to access segment
+- Transparent: hosts _unaware_ of presence of switches
+- Plug-and-play, self-learning
+  - Switches do not need to be configured
+- Hosts have dedicated, direct connection to switch
+- Switches buffer packets
+- Ethernet protocol used on each incoming link, so:
+  - No collisions; full duplex
+  - Each link is its own collision domain
+- Switching: A to A' and B to B' can transmit simultaneously, without collisions
+  - How does it know? Each switch has a **switch table**, each entry:
+    - (MAC address of host, interface to reach host, time stamp)
+    - Looks like a routing table!
+  - Switch learns which hosts can be reached through which interfaces
+    - When a frame is received, switch "learns" the location of the sender:
+      incoming LAN segment
+    - Records sender/location pair in switch table
+- Interconnection switches
+  - Self learning switches can be connected together

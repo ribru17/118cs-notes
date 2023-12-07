@@ -1775,6 +1775,11 @@ the control plane
 
 ## Wireless Networks
 
+- Wireless hosts
+  - Laptop, smartphone, `IoT`
+  - Run applications
+  - May be stationary (non-mobile) or mobile
+    - Wireless does _not_ always mean mobility!
 - Base station
   - Typically connected to wired network
   - Relay: responsible for sending packets between wired network and wireless
@@ -1788,3 +1793,135 @@ the control plane
     - Typically higher frequencies as low ones have already been taken
 - Infrastructure mode
 - `Ad hoc` mode
+  - No base stations
+  - Nodes can only transmit to other nodes within link coverage
+  - Nodes organize themselves into a network: route among themselves
+
+<!-- Lecture 19 -->
+
+### Wireless network taxonomy
+
+|                           | Single Hop                                                                       | Multiple Hops                                                                                                        |
+| ------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Infrastructure (e.g. APs) | Host connects to base station (WiFi, cellular) which connects to larger internet | Host may have to relay through several wireless nodes to connect to larger Internet: _mesh net_                      |
+| No infrastructure         | No base station, no connection to larger Internet (Bluetooth, ad hoc nets)       | No base station, no connection to larger Internet. May have to relay to reach other given wireless node MANET, VANET |
+
+- Example of no infrastructure, single-hop wireless
+  - Airdrop
+    - Uses Bluetooth to create peer-to-peer Wi-Fi connectivity to transfer the
+      file
+    - Transfer file securely by using combination of Wi-Fi and Bluetooth
+      technologies
+      - Uses Bluetooth to find devices that you can send to
+      - Uses Wi-Fi direct to transfer the file (`ad hoc` link)
+
+### Wireless Link Characteristics
+
+- **Decreased signal strength**: radio signal attenuates as it propagates
+  through matter (path loss)
+- **Interference from other sources**: wireless network frequencies (e.g. 2.4
+  GHz) shared by many devices (WiFi, cellular, motors, ...)
+- **Multipath propagation**: radio signal reflects off objects ground, arriving
+  at destination at slightly different times
+- Makes communication across (even a point to point) wireless link much more
+  "difficult"
+- **SNR**: signal-to-noise ratio
+  - Larger SNR: easier to extract signal from noise (a "good thing")
+- SNR versus `BER` (Bit Error Rate) trade-offs
+  - Given physical layer: increase power -> increase SNR -> decrease `BER`
+  - Given SNR: Choose physical layer that meets `BER` requirement, giving
+    highest throughput
+    - SNR may change with mobility: dynamically adapt physical layer (modulation
+      technique, rate)
+
+### Code Division Multiple Access (CDMA)
+
+- Unique "code" assigned to each user, i.e. code set partitioning
+  - All users share the same frequency, but each user has its own "chipping"
+    sequence (i.e. code) to encode data
+  - Allows multiple users to "coexist" and transmit simultaneously with minimal
+    interference (if codes are "orthogonal")
+- Encoding: inner product (original data) x (chipping sequence)
+- Decoding: summing inner product: (encoded data) x (chipping sequence)
+- Channel sums together transmissions from sender 1 and 2
+  - Receiver can recover sender 1's original data from the summed channel data
+
+### WiFi as Wireless LAN
+
+- All WiFi 802.11 versions use `CSMA/CA` for multiple access, and have
+  base-station and `ad hoc` network versions
+- 802.11
+  - LAN architecture
+    - Wireless host communicates with base station
+      - Base station = access point (AP)
+    - Basic Service Set (`BSS`) (aka "cell")
+      - Wireless hosts
+      - Access point (AP): base station
+      - `Ad hoc` mode: hosts only
+  - Channels, association
+    - Spectrum divided into channels at different frequencies
+      - AP admin chooses frequency for AP
+      - Interference possible: channel can be same as that chosen by neighboring
+        AP!
+    - Arriving host: _must associate_ with an AP
+      - Scans channels, listening for **beacon frames** containing AP's name
+        (`SSID`) and MAC address
+      - Selects AP to associate with
+      - Then may perform authentication
+      - Then typically run `DHCP` to get IP address in AP's subnet
+  - Passive/active scanning
+    - Passive:
+      1. Beacon frames sent from AP's
+      2. Association request frame sent: `H1` to select AP
+      3. Association response frame sent from selected AP to `H1`
+    - Active:
+      1. Probe request frame broadcast from `H1`
+      2. Probe response frames sent from AP's
+      3. Association request frame sent: `H1` to selected AP
+      4. Association response frame sent from selected AP to `H1`
+  - Multiple access
+    - Avoid collisions: 2+ nodes transmitting at the same time
+    - `CSMA`: sense before transmitting
+      - Don't collide with detected ongoing transmission by another node
+    - _No_ collision detection!
+      - Difficult to sense collisions: high transmitting signal, weak received
+        signal due to fading
+      - Can't sense all collisions in any case: hidden terminal problem, fading
+      - Goal: _Avoiding collisions_: `CSMA/CollisionAvoidance`
+  - MAC Protocol: `CSMA/CA`
+    - Sender:
+      - If sense channel idle for `DIFS` then transmit entire frame (no CD)
+      - If sense channel busy then:
+        - Start random backoff time
+        - Timer counts down while channel idle
+        - Transmit when timer expires
+        - If no `ACK`, increase random backoff interval, repeat 2
+    - Receiver:
+      - If frame received OK:
+        - Return `ACK` after `SIFA` (`ACK` needed due to hidden terminal
+          problem)
+    - Avoiding collisions (more)
+      - Idea: sender "reserves" channel use for data frames using small
+        reservation packets
+        - Sender first transmits small request-to-send (`RTS`) packet to BS
+          using `CSMA`
+        - BS Broadcasts clear-to-send `CTS` in response to `RTS`
+        - `CTS` heard by all nodes
+          - Sender transmits data frame
+          - Other stations defer transmissions
+    - Frame addressing gives the frame the MAC address of the wireless host or
+      AP receiving, transmitting frame, as well as router interface MAC address
+  - Mobility within same subnet
+    - `H1` remains in the same IP subnet: IP address can remain same
+    - Switch: which AP is associated with `H1`?
+      - Self-learning: switch will see frame from `H1` and "remember" which
+        switch port can be used to reach `H1`
+
+### Mobility
+
+- Spectrum of mobility, from the network perspective (no to high):
+  - Device moves between networks, but powers down while moving
+  - Device moves within same AP in one provider network
+  - Device moves among AP's in one provider network
+  - Device moves among multiple provider networks, while maintaining ongoing
+    connections

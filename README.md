@@ -1770,3 +1770,21 @@ the control plane
     - Records sender/location pair in switch table
 - Interconnection switches
   - Self learning switches can be connected together
+
+<!-- Lecture 18 -->
+
+## Wireless Networks
+
+- Base station
+  - Typically connected to wired network
+  - Relay: responsible for sending packets between wired network and wireless
+    host(s) in its "area"
+    - E.g. cell towers, 802.11 access points
+- Wireless links
+  - Typically used to connect mobile(s) to base station, also used as backbone
+    link
+  - Multiple access protocol coordinates link access
+  - Various transmission rates and distances, frequency bands
+    - Typically higher frequencies as low ones have already been taken
+- Infrastructure mode
+- `Ad hoc` mode
